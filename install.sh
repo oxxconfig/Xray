@@ -70,7 +70,7 @@ function init_env_optimization() {
 
     # 第二步：开启 TCP BBR 加速与 FQ 队列 (防重复追加)
     if ! grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
-        printf "\n# Network Optimization\net.core.default_qdisc=fq\nnet.ipv4.tcp_congestion_control=bbr\n" >> /etc/sysctl.conf
+        printf "\n# Network Optimization\nnet.core.default_qdisc=fq\nnet.ipv4.tcp_congestion_control=bbr\n" >> /etc/sysctl.conf
         sysctl -p >/dev/null
         echo -e "${GREEN}[基础配置]${NC} TCP BBR 拥塞控制算法已成功开启"
     fi
