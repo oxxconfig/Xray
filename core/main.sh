@@ -1,24 +1,4 @@
 #!/usr/bin/env bash
-# =============================================================================
-# 注释: 通过 Qwen3-Coder 生成。
-# 脚本名称: main.sh
-# 脚本仓库: https://github.com/zxcvos/Xray-script
-# 功能描述: Xray-script 项目的主要管理脚本。
-#           提供交互式菜单和命令行接口，用于安装、配置、管理 Xray-core
-#           和相关服务（如 Nginx, GeoIP, WARP 等），支持多语言。
-# 作者: zxcvos
-# 时间: 2025-07-25
-# 版本: 1.0.0
-# 依赖: bash, jq, cut, sed
-# 配置:
-#   - ${SCRIPT_CONFIG_DIR}/config.json: 用于读取语言设置 (language) 和脚本配置
-#   - ${I18N_DIR}/${lang}.json: 用于读取具体的提示文本 (i18n 数据文件)
-#
-# Copyright (C) 2025 zxcvos
-# =============================================================================
-
-# set -Eeuxo pipefail
-
 # --- 环境与常量设置 ---
 # 将常用路径添加到 PATH 环境变量，确保脚本能在不同环境中找到所需命令
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin:/snap/bin
