@@ -239,26 +239,6 @@ SNI 配置适合安装一次后长期使用，不适合反复重置系统安装�
 
 ## 致谢
 
-[Xray-core][Xray-core]
-
-[REALITY][REALITY]
-
-[XHTTP: Beyond REALITY][XHTTP]
-
-[integrated-examples][lxhao61/integrated-examples]
-
-[xhttp 五合一配置][xhttp 五合一配置]
-
-[部署 Cloudflare WARP Proxy][haoel]
-
-[cloudflare-warp 镜像][e7h4n]
-
-[V2Ray 路由规则文件加强版][v2ray-rules-dat]
-
-[kirin10000/Xray-script][kirin10000/Xray-script]
-
-[Cloudreve][cloudreve]
-
 **此脚本仅供交流学习使用，请勿使用此脚本行违法之事。网络非法外之地，行非法之事，必将接受法律制裁。**
 
 * [来自zxcvos](https://github.com/zxcvos)
