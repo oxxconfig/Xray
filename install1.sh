@@ -1,21 +1,18 @@
+cat << 'EOF' > install1.sh
 #!/usr/bin/env bash
-# 确保脚本以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
     echo "[错误] 请使用 root 用户或 sudo 运行此脚本！"
     exit 1
 fi
 
-# 开启严格错误检查（确保前置环境优化出错时能及时中断）
 set -euo pipefail
 
-# --- 1. 全局环境变量压制（全面禁绝弹窗交互） ---
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin:/snap/bin
 export PATH
 
-# 常量设置
 readonly GREEN='\033[32m'
 readonly YELLOW='\033[33m'
 readonly RED='\033[31m'
@@ -27,22 +24,14 @@ readonly CUR_FILE="$(basename "$0")"
 readonly SCRIPT_CONFIG_DIR="${HOME}/.xray-script"
 readonly SCRIPT_CONFIG_PATH="${SCRIPT_CONFIG_DIR}/config.json"
 
-# 全局变量声明
 declare -A I18N_DATA=(
-    ['error']='错误'
-    ['root']='请使用 root 权限运行该脚本'
-    ['supported']='不支持当前系统，请切换到 Ubuntu 16+、Debian 9+、CentOS 7+'
-    ['ubuntu']='不支持当前版本，请切换到 Ubuntu 16+ 重试'
-    ['debian']='不支持当前版本，请切换到 Debian 9+ 重试'
-    ['centos']='不支持当前版本，请切换到 CentOS 7+ 重试'
-    ['tip']='更新提示'
-    ['new']='发现有新脚本, 是否更新'
-    ['now']='是否更新 [Y/n] '
-    ['promptly']='请及时更新脚本'
-    ['completed']='更新完成'
-    ['download']='正在下载'
-    ['failed']='下载失败'
-    ['downloaded']='文件已下载到'
+    ['error']='错误' ['root']='请使用 root 权限运行该脚本'
+    ['supported']='不支持当前系统' ['ubuntu']='不支持当前版本'
+    ['debian']='不支持当前版本' ['centos']='不支持当前版本'
+    ['tip']='更新提示' ['new']='发现有新脚本, 是否更新'
+    ['now']='是否更新 [Y/n] ' ['promptly']='请及时更新脚本'
+    ['completed']='更新完成' ['download']='正在下载'
+    ['failed']='下载失败' ['downloaded']='文件已下载到'
 )
 declare PROJECT_ROOT=''
 declare I18N_DIR=''
@@ -52,42 +41,32 @@ declare CONFIG_DIR=''
 declare TOOL_DIR=''
 declare QUICK_INSTALL=''
 declare SCRIPT_CONFIG=''
-declare LANG_PARAM='--lang=zh' # 默认锁死中文，拒绝语言选择弹窗交互
+declare LANG_PARAM='--lang=zh'
 declare FORCE_CHECK_DEPS=0
 
-# =============================================================================
-# 新增函数: init_env_optimization (融合原脚本前三步)
-# =============================================================================
 function init_env_optimization() {
     echo -e "${GREEN}[基础配置]${NC} 开始优化系统内核与防火墙规则..."
-    
-    # 第一步：安装基础组件 (对 Dpkg 强制套用默认配置，不因冲突卡死)
     if [[ "$(_os)" == "ubuntu" || "$(_os)" == "debian" ]]; then
         apt-get update -y
         apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" wget curl
     fi
 
-    # 第二步：彻底擦除可能由于转义问题写入的 et.core 旧脏数据，防止 sysctl 报错
     sudo sed -i '/et.core.default_qdisc/d' /etc/sysctl.conf
 
-    # 使用 cat 闭包写法，防重复追加，完美规避 printf 反斜杠转义带来的拼写丢失问题
     if ! grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
-        sudo cat << 'EOF' >> /etc/sysctl.conf
+        sudo cat << 'EOF2' >> /etc/sysctl.conf
 
 # Network Optimization
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
-EOF
+EOF2
         sudo sysctl -p >/dev/null 2>&1
         echo -e "${GREEN}[基础配置]${NC} TCP BBR 拥塞控制算法已成功开启并刷新"
     else
-        # 即使已经存在，也强制重新加载一次确保生效
         sudo sysctl -p >/dev/null 2>&1
     fi
 
-# 第三步：配置防火墙放行规则 (全面兼容 set -e 严格模式)
     if cmd_exists "iptables"; then
-        # 使用 || true 压制潜在的非零返回，用标准 grep 过滤代替取反符号
         if ! iptables -L INPUT -n 2>/dev/null | grep -q "dpt:443"; then
             iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
             echo -e "${GREEN}[基础配置]${NC} 防火墙已放行 TCP 443 端口"
@@ -116,9 +95,6 @@ function _os_full() {
     if [[ -f /etc/os-release ]]; then
         awk -F'[= "]' '/PRETTY_NAME/{print $3,$4,$5}' /etc/os-release && return
     fi
-    if [[ -f /etc/lsb-release ]]; then
-        awk -F'[="]+' '/DESCRIPTION/{print $2}' /etc/lsb-release && return
-    fi
 }
 
 function _os_ver() {
@@ -140,12 +116,8 @@ function cmd_exists() {
 function parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-        --lang=*)
-            LANG_PARAM="${1}"
-            ;;
-        --check-deps)
-            FORCE_CHECK_DEPS=1
-            ;;
+        --lang=*) LANG_PARAM="${1}" ;;
+        --check-deps) FORCE_CHECK_DEPS=1 ;;
         esac
         shift
     done
@@ -161,17 +133,6 @@ function load_i18n() {
     if [[ "$lang" == "auto" ]]; then
         lang=$(echo "$LANG" | cut -d'_' -f1)
     fi
-    if [[ "$lang" == "en" ]]; then
-        I18N_DATA=(
-            ['error']='Error' ['root']='This script must be run as root'
-            ['supported']='Not supported OS' ['ubuntu']='Not supported OS, please change to Ubuntu 18+.'
-            ['debian']='Not supported OS, please change to Debian 9+.' ['centos']='Not supported OS, please change to CentOS 7+.'
-            ['tip']='Update Notice' ['new']='A new version is available. Update?'
-            ['now']='Update now? [Y/n]' ['promptly']='Please update the script promptly.'
-            ['completed']='Update completed' ['download']='Downloading'
-            ['failed']='Download failed' ['downloaded']='The file has been downloaded to'
-        )
-    fi
 }
 
 function _error() {
@@ -183,18 +144,10 @@ function _error() {
 
 function check_os() {
     case "$(_os)" in
-    centos)
-        if [[ "$(_os_ver)" -lt 7 ]]; then _error "${I18N_DATA['centos']}"; fi
-        ;;
-    ubuntu)
-        if [[ "$(_os_ver)" -lt 16 ]]; then _error "${I18N_DATA['ubuntu']}"; fi
-        ;;
-    debian)
-        if [[ "$(_os_ver)" -lt 9 ]]; then _error "${I18N_DATA['debian']}"; fi
-        ;;
-    *)
-        _error "${I18N_DATA['supported']}"
-        ;;
+    centos) [[ "$(_os_ver)" -lt 7 ]] && _error "${I18N_DATA['centos']}" ;;
+    ubuntu) [[ "$(_os_ver)" -lt 16 ]] && _error "${I18N_DATA['ubuntu']}" ;;
+    debian) [[ "$(_os_ver)" -lt 9 ]] && _error "${I18N_DATA['debian']}" ;;
+    *) _error "${I18N_DATA['supported']}" ;;
     esac
 }
 
@@ -215,7 +168,7 @@ function check_dependencies() {
         done
         ;;
     esac
-    [[ ${#missing_packages[@]} -eq 0 ]]
+    return ${#missing_packages[@]}
 }
 
 function install_dependencies() {
@@ -224,14 +177,10 @@ function install_dependencies() {
     centos)
         packages+=("crontabs" "util-linux" "iproute" "procps-ng" "bind-utils")
         if cmd_exists "dnf"; then
-            dnf update -y
-            dnf install -y dnf-plugins-core
-            dnf update -y
+            dnf update -y && dnf install -y dnf-plugins-core
             for pkg in "${packages[@]}"; do dnf install -y ${pkg}; done
         else
-            yum update -y
-            yum install -y epel-release yum-utils
-            yum update -y
+            yum update -y && yum install -y epel-release yum-utils
             for pkg in "${packages[@]}"; do yum install -y ${pkg}; done
         fi
         ;;
@@ -252,46 +201,33 @@ function download_github_files() {
     cd "${target_dir}"
     echo -e "${GREEN}[${I18N_DATA['download']}]${NC} ${github_api_url}"
     
-    # 1. 临时下载为压缩包，避免管道断裂无法捕获
     if ! curl -sLo temp_archive.tar.gz "${github_api_url}"; then
         _error "${I18N_DATA['failed']}: ${github_api_url}"
     fi
-    
-    # 2. 干净解压，压制 tar 警告，确保 set -e 不会误杀
     tar -xzf temp_archive.tar.gz --no-same-owner || true
-    
-    # 3. 规整目录层级（适配 Xray-main 结构）
     if [ -d "Xray-main" ]; then
         cp -r Xray-main/* ./ 2>/dev/null || true
         rm -rf Xray-main
     fi
-    
-    # 4. 清理临时文件
     rm -f temp_archive.tar.gz
 }
 
 function download_xray_script_files() {
     local target_dir="$1"
-    # 彻底放弃 api.github.com，改用不限流的 raw/archive 存档直连链
     local script_github_api="https://github.com/oxxconfig/Xray/archive/refs/heads/main.tar.gz"
     download_github_files "${target_dir}" "${script_github_api}"
 }
 
-# =============================================================================
-# 优化更新函数: 剥离全自动运行中阻塞的 read 确认弹窗
-# =============================================================================
 function check_xray_script_version() {
     local script_config_github_url="https://raw.githubusercontent.com/oxxconfig/Xray/main/config.json"
-    local local_version
+    local local_version remote_version
     local_version="$(jq -r '.version' "${SCRIPT_CONFIG_PATH}" 2>/dev/null || echo "0.0.0")"
-    
-    local remote_version
     remote_version="$(curl -fsSL --connect-timeout 5 "$script_config_github_url" | jq -r '.version' 2>/dev/null || echo "0.0.0")"
 
     if [[ "${local_version}" != "${remote_version}" && "${remote_version}" != "0.0.0" ]]; then
         echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} 检测到脚本新版本，一键自动更新中..."
         cd "${HOME}"
-        readonly temp_dir="${SCRIPT_CONFIG_DIR}/xray-script-temp"
+        local temp_dir="${SCRIPT_CONFIG_DIR}/xray-script-temp"
         mkdir -p "${temp_dir}"
         download_xray_script_files "${temp_dir}"
         rm -rf "${PROJECT_ROOT}"
@@ -300,7 +236,6 @@ function check_xray_script_version() {
         cp -f "${PROJECT_ROOT}/install.sh" "${CUR_DIR}/${CUR_FILE}"
         sed -i "s|${local_version}|${remote_version}|" "${SCRIPT_CONFIG_PATH}" 2>/dev/null || true
         echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} ${I18N_DATA['completed']}"
-        # 重新执行
         bash "${CUR_DIR}/${CUR_FILE}" "$@"
         exit 0
     fi
@@ -309,22 +244,14 @@ function check_xray_script_version() {
 function main() {
     parse_args "$@"
     load_i18n
-
-    # 1. Root 权限断言
     [[ $EUID -ne 0 ]] && _error "${I18N_DATA['root']}"
-
-    # 2. 系统平台检查
     check_os
-
-    # 3. 执行前三步的环境核心优化 (BBR/FQ/防火墙端口放行)
     init_env_optimization
 
-    # 4. 依赖项前置全自动安装
     local is_first_run=0
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then is_first_run=1; fi
 
     if [[ "${is_first_run}" -eq 1 || "${FORCE_CHECK_DEPS}" -eq 1 ]]; then
-        # 改为正向判断， || true 确保状态码安全
         if check_dependencies; then
             echo -e "${GREEN}[基础配置]${NC} 检测到核心环境依赖已完整，跳过安装"
         else
@@ -333,18 +260,13 @@ function main() {
         fi
     fi
 
-    # 创建配置目录（如果不存在）
-    if [[ ! -d "${SCRIPT_CONFIG_DIR}" ]]; then 
-        mkdir -p "${SCRIPT_CONFIG_DIR}"
-    fi
+    if [[ ! -d "${SCRIPT_CONFIG_DIR}" ]]; then mkdir -p "${SCRIPT_CONFIG_DIR}"; fi
 
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then
-        # 如果下载失败(||)，则在本地生成一个结构完全对齐的保底 JSON
         wget --timeout=10 -O "${SCRIPT_CONFIG_PATH}" https://raw.githubusercontent.com/oxxconfig/Xray/main/config.json || \
         echo '{"version":"2026.03.17","language":"zh","path":"/usr/local/xray-script"}' > "${SCRIPT_CONFIG_PATH}"
     fi
 
-    # 处理其余自定义参数
     while [[ $# -gt 0 ]]; do
         case "$1" in
         --vision | --xhttp | --fallback) QUICK_INSTALL="${1}" ;;
@@ -372,14 +294,12 @@ function main() {
     CONFIG_DIR="${PROJECT_ROOT}/config"
     TOOL_DIR="${PROJECT_ROOT}/tool"
 
-    # 5. 下载或更新核心框架文件
     if [[ -d "${PROJECT_ROOT}" ]]; then
         check_xray_script_version "$@"
     else
         download_xray_script_files "${PROJECT_ROOT}"
     fi
 
-    # 6. 强制静默写入语言配置 (防止 menu.sh 弹出选择语言交互菜单)
     local lang
     lang="$(jq -r '.language' "${SCRIPT_CONFIG_PATH}" 2>/dev/null || echo "")"
     if [[ -z "${lang}" ]]; then
@@ -388,7 +308,6 @@ function main() {
         echo "${SCRIPT_CONFIG}" >"${SCRIPT_CONFIG_PATH}"
     fi
 
-    # 7. 【核心新增集成】全自动为系统绑定一秒钟直达的核心业务菜单快捷键
     if [ -f "${CORE_DIR}/main.sh" ]; then
         sed -i '/alias xray=/d' ~/.bashrc
         echo "alias xray='set +euo pipefail; bash ${CORE_DIR}/main.sh'" >> ~/.bashrc
@@ -396,13 +315,10 @@ function main() {
     fi
 
     echo -e "${GREEN}[部署完成]${NC} 前置依赖与系统优化已就绪，正在唤起 Xray 主内核业务脚本..."
-    
-    # 8. [关键修复] 彻底关闭严格检查模式，释放标准的标准输入流，防止后续交互式菜单 read 命令闪退
     set +euo pipefail
-
-    # 9. 启动主业务脚本
     exec bash "${CORE_DIR}/main.sh" "${QUICK_INSTALL}"
 }
 
-# 脚本入口执行
 main "$@"
+EOF
+sed -i 's/\r$//' install1.sh && sudo bash install1.sh
