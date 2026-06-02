@@ -260,13 +260,18 @@ SNI 配置适合安装一次后长期使用，不适合反复重置系统安装�
 [Cloudreve][cloudreve]
 
 **此脚本仅供交流学习使用，请勿使用此脚本行违法之事。网络非法外之地，行非法之事，必将接受法律制裁。**
-[来自zxcvos]: https://github.com/zxcvos
-[Xray-core]: https://github.com/XTLS/Xray-core (THE NEXT FUTURE)
-[REALITY]: https://github.com/XTLS/REALITY (THE NEXT FUTURE)
-[XHTTP]: https://github.com/XTLS/Xray-core/discussions/4113 (XHTTP: Beyond REALITY)
-[lxhao61/integrated-examples]: https://github.com/lxhao61/integrated-examples (以 V2Ray（v4 版） 或 Xray、Nginx 或 Caddy（v2 版）、Hysteria 等打造常用科学上网的优化配置及最优组合示例，且提供集成特定插件的 Caddy（v2 版） 文件，分享给大家食用及自己备份。)
-[xhttp 五合一配置]: https://github.com/XTLS/Xray-core/discussions/4118 (xhttp 五合一配置 \( reality 直连与过 CDN 共存, 附小白可抄的配置\))
-[haoel]: https://github.com/haoel/haoel.github.io#943-docker-%E4%BB%A3%E7%90%86 (使用 Docker 快速部署 Cloudflare WARP Proxy)
+
+* [来自zxcvos](https://github.com/zxcvos)
+* [Xray-core (THE NEXT FUTURE)](https://github.com/XTLS/Xray-core)
+* [REALITY (THE NEXT FUTURE)](https://github.com/XTLS/REALITY)
+* [XHTTP: Beyond REALITY](https://github.com/XTLS/Xray-core/discussions/4113)
+* [lxhao61/integrated-examples](https://github.com/lxhao61/integrated-examples) - 以 V2Ray（v4 版） 或 Xray、Nginx 或 Caddy（v2 版）、Hysteria 等打造常用科学上网的优化配置及最优组合示例，且提供集成特定插件的 Caddy（v2 版） 文件，分享给大家食用及自己备份。
+* [xhttp 五合一配置](https://github.com/XTLS/Xray-core/discussions/4118) - reality 直连与过 CDN 共存, 附小白可抄的配置
+* [haoel Docker 代理](https://github.com/haoel/haoel.github.io#943-docker-%E4%BB%A3%E7%90%86) - 使用 Docker 快速部署 Cloudflare WARP Proxy
+* [e7h4n cloudflare-warp 镜像](https://github.com/e7h4n/cloudflare-warp)
+* [v2ray-rules-dat 路由规则文件加强版](https://github.com/Loyalsoldier/v2ray-rules-dat)
+* [kirin10000/Xray-script](https://github.com/kirin10000/Xray-script)
+* [cloudreve](https://github.com/cloudreve/cloudreve)
 [e7h4n]: https://github.com/e7h4n/cloudflare-warp (cloudflare-warp 镜像)
 [v2ray-rules-dat]: https://github.com/Loyalsoldier/v2ray-rules-dat (V2Ray 路由规则文件加强版)
 [kirin10000/Xray-script]: https://github.com/kirin10000/Xray-script (kirin10000/Xray-script)
