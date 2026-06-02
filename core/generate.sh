@@ -1,21 +1,4 @@
 #!/usr/bin/env bash
-#
-# Copyright (C) 2025 zxcvos
-#
-# Xray-script:
-#   https://github.com/zxcvos/Xray-script
-# =============================================================================
-# 注释: 通过 Qwen3-Coder 生成。
-# 脚本名称: generate.sh
-# 功能描述: 生成各种随机或唯一标识符，如端口、UUID、密码、路径等，用于项目配置。
-# 作者: zxcvos
-# 时间: 2025-07-25
-# 版本: 1.0.0
-# 依赖: bash, od, jq, xray (可选), openssl (用于 generate_short_id)
-# 配置: 需要 ${SCRIPT_CONFIG_DIR}/config.json 文件支持 generate_target 和 generate_server_names 功能
-# =============================================================================
-
-# set -Eeuxo pipefail
 
 # --- 环境与常量设置 ---
 # 将常用路径添加到 PATH 环境变量，确保脚本能在不同环境中找到所需命令
