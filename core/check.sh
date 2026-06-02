@@ -1,25 +1,4 @@
 #!/usr/bin/env bash
-#
-# Copyright (C) 2025 zxcvos
-#
-# Xray-script:
-#   https://github.com/zxcvos/Xray-script
-# =============================================================================
-# 注释: 通过 Qwen3-Coder 生成。
-# 脚本名称: check.sh
-# 功能描述: 提供一系列验证函数，用于检查 IP、端口、UUID、密码、路径、Short ID、
-#           域名安全性、DNS 解析、Xray 配置/版本以及邮箱地址的有效性。
-#           主要用于在配置过程中验证用户输入或系统状态。
-# 作者: zxcvos
-# 时间: 2025-07-25
-# 版本: 1.0.0
-# 依赖: bash, jq, dig, curl, openssl, stdbuf
-# 配置:
-#   - ${SCRIPT_CONFIG_DIR}/config.json: 用于读取语言设置 (language)
-#   - ${I18N_DIR}/${lang}.json: 用于读取具体的提示文本 (i18n 数据文件)
-# =============================================================================
-
-# set -Eeuxo pipefail
 
 # --- 环境与常量设置 ---
 # 将常用路径添加到 PATH 环境变量，确保脚本能在不同环境中找到所需命令
