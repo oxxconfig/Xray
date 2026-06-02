@@ -1,8 +1,7 @@
 中文 | [English](/.github/README.en.md)
 
-# Xray 管理脚本 :sparkles:
+# Xray 管理脚本 :
 
-* 一个纯 Shell 编写的 Xray 管理脚本
 * 可选配置:
   * mKCP (VLESS-mKCP-seed)
   * Vision (VLESS-Vision-REALITY)
@@ -52,35 +51,11 @@
 4. 上下行分离详情请看 [XHTTP: Beyond REALITY][XHTTP] 与 [xhttp 五合一配置][xhttp 五合一配置] 了解。
 5. 使用 SNI 获取证书时遇到 【Could not get nonce, let's try again】 请查看 [ZeroSSL 状态页](https://status.zerossl.com/)，大概率是 ZeroSSL 的【Free ACME Service】处于 【Service disruption】或【Service outage】状态。
 
-## 更新日志
-
-1. v2025.11.19 版本解决【开启 WARP 时没有设置日志限制，导致容器日志会一直叠加，最终占满硬盘空间】问题。
-   1. 已启动 WARP 分流的用户可以在【管理配置】->【分流管理】中选择【重置 WARP Proxy】选项，该选项实现清空容器日志与重置 WARP Proxy。
-   2. 已添加日志限制，如需使用 WARP 功能直接启用即可。
-2. v2026.03.01 版本添加切换 CA 厂商功能，切换 CA 厂商时，脚本会对现有域名证书执行强制重签（`domain`、`cdn` 与 `custom_sites[].domain`），全部成功后才写入新 CA；若中途失败会自动回滚到原 CA，并恢复对应配置，避免影响后续 acme 自动续期任务。
-   1. 强制重签会绕过「域名未变化」检查（acme.sh 的 `Domains not changed` 提示场景）。
-   2. 请留意 CA 侧签发频率限制（例如 Let's Encrypt 的速率限制）。
-3. v2026.03.17 版本添加 SNI 自定义域名与反代应用管理功能，用于在不影响现有 `Reality(domain)` 与 `CDN(cdn)` 站点的前提下，额外挂载多个 HTTPS 反代站点。
-   1. 菜单路径：`管理配置 -> SNI 配置管理 -> 管理自定义域名与反代应用`
-   2. 支持列表 / 新增 / 编辑 / 删除，自定义站点拥有独立证书、独立 `sites-available/<domain>.conf`、独立 stream 映射与 UDS。
-   3. `stream.conf` 会按 `domain`、`cdn`、`custom_sites` 全量重建；UDS 名称规则为 `SHA-256(域名)` 前 `12` 位 + 端口号。
-   4. 反代目标支持仅输入端口或完整 `http(s)://host:port` 地址；仅输入端口时自动规范化为 `http://127.0.0.1:<port>`；不接受带 `path`、`query`、`fragment` 的地址。
-   5. 编辑时仅修改上游地址不会重复签发证书；修改域名时会先申请新证书，再切换配置，失败自动回滚；删除时会同时清理站点配置、软链、续签记录与证书目录。
-   6. 自定义域名不能与 `domain`、`cdn` 或其他自定义站点域名重复；切换 CA 厂商与“强制续签所有证书”都会覆盖自定义站点域名。
-   7. 自定义站点为“纯反代站点”，不包含 Xray 的 `xhttp/grpc` 路径，也不接入 Cloudreve 管理逻辑；代理层不会额外注入 `Content-Security-Policy`，由上游应用自行控制 CSP。
-
-## 分享链接
-
-基于[VMessAEAD / VLESS 分享链接标准提案](https://github.com/XTLS/Xray-core/discussions/716)与[v2rayN](https://github.com/2dust/v2rayN)实现，如果其他客户端无法正常使用，请自行根据分享链接进行修改。
-
-SNI 配置中，CDN 的分享链接 Alpn 默认为 H2，如有 H3 需求，请自行在客户端修改。
-
-## 如何使用
-
 * 获取
 
   ```sh
-  wget --no-check-certificate -O ${HOME}/Xray-script.sh https://raw.githubusercontent.com/zxcvos/Xray-script/main/install.sh
+  wget --no-check-certificate -O ${HOME}/Xray-script.sh https://raw.githubusercontent.com/oxxconfig/Xray/main/install.sh
+
   ```
 
 * 使用
@@ -113,7 +88,10 @@ SNI 配置中，CDN 的分享链接 Alpn 默认为 H2，如有 H3 需求，请�
   ```sh
   wget --no-check-certificate -O ${HOME}/Xray-script.sh https://raw.githubusercontent.com/zxcvos/Xray-script/main/install.sh && bash ${HOME}/Xray-script.sh
   ```
-
+* 无人值守一键部署
+  ```sh
+curl -y 10 --connect-timeout 10 --retry 3 -sSO https://raw.githubusercontent.com/oxxconfig/Xray/main/install.sh && sed -i 's/\r$//' install.sh && echo "alias xray='set +euo pipefail; bash /usr/local/xray-script/install.sh'" >> ~/.bashrc && source ~/.bashrc && printf "1\n1\n" | sudo bash install.sh
+  ```
 ## 脚本界面
 
 ```sh
@@ -123,8 +101,6 @@ SNI 配置中，CDN 的分享链接 Alpn 默认为 H2，如有 H3 需求，请�
    > <   |  __  |    | |       | |    |  ___/ 
   / . \  | |  | |    | |       | |    | |     
  /_/ \_\ |_|  |_|    |_|       |_|    |_|     
-
-Copyright (C) zxcvos | https://github.com/zxcvos/Xray-script
 
 -------------------------------------------
 Xray       : v25.7.26
