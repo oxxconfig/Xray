@@ -85,11 +85,14 @@ EOF
         sudo sysctl -p >/dev/null 2>&1
     fi
 
-    # 第三步：配置防火墙放行规则 (防重复添加)
+# 第三步：配置防火墙放行规则 (全面兼容 set -e 严格模式)
     if cmd_exists "iptables"; then
-        if ! iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null; then
-            iptables -I INPUT -p tcp --dport 443 -j ACCEPT
+        # 使用 || true 压制潜在的非零返回，用标准 grep 过滤代替取反符号
+        if ! iptables -L INPUT -n 2>/dev/null | grep -q "dpt:443"; then
+            iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
             echo -e "${GREEN}[基础配置]${NC} 防火墙已放行 TCP 443 端口"
+        else
+            echo -e "${GREEN}[基础配置]${NC} 防火墙 TCP 443 端口规则已存在，跳过配置"
         fi
     fi
 }
