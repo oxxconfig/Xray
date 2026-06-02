@@ -254,11 +254,17 @@ function download_github_files() {
     fi
 }
 
+# function download_xray_script_files() {
+#     local target_dir="$1"
+#     local script_github_api="https://api.github.com/repos/oxxconfig/Xray/tarball/main"
+#     download_github_files "${target_dir}" "${script_github_api}"
+# }
+
 function download_xray_script_files() {
     local target_dir="$1"
-    local script_github_api="https://api.github.com/repos/oxxconfig/Xray/tarball/main"
+    # 彻底放弃 api.github.com，改用不限流的 raw/archive 存档直连链
+    local script_github_api="https://github.com/oxxconfig/Xray/archive/refs/heads/main.tar.gz"
     download_github_files "${target_dir}" "${script_github_api}"
-}
 
 # =============================================================================
 # 优化更新函数: 剥离全自动运行中阻塞的 read 确认弹窗
