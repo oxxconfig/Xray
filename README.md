@@ -237,7 +237,7 @@ SNI 配置适合安装一次后长期使用，不适合反复重置系统安装�
 | --with-http_perl_module         |                                      | perl-ExtUtils-Embed |
 |                                 | libperl-dev                          | perl-devel          |
 
-## 致谢
+## ⚖️ 免责声明与致谢 (Disclaimer & Credits)
 
 **此脚本仅供交流学习使用，请勿使用此脚本行违法之事。网络非法外之地，行非法之事，必将接受法律制裁。**
 
