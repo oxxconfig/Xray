@@ -1,12 +1,12 @@
-cat << 'EOF' > install1.sh
+cat << 'EOF' > install.sh
 #!/usr/bin/env bash
+# 确保脚本以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
     echo "[错误] 请使用 root 用户或 sudo 运行此脚本！"
     exit 1
 fi
 
-set -euo pipefail
-
+# 全局环境变量压制（全面禁绝弹窗交互）
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 
@@ -46,6 +46,7 @@ declare FORCE_CHECK_DEPS=0
 
 function init_env_optimization() {
     echo -e "${GREEN}[基础配置]${NC} 开始优化系统内核与防火墙规则..."
+    
     if [[ "$(_os)" == "ubuntu" || "$(_os)" == "debian" ]]; then
         apt-get update -y
         apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" wget curl
@@ -60,15 +61,12 @@ function init_env_optimization() {
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
 EOF2
-        sudo sysctl -p >/dev/null 2>&1
-        echo -e "${GREEN}[基础配置]${NC} TCP BBR 拥塞控制算法已成功开启并刷新"
-    else
-        sudo sysctl -p >/dev/null 2>&1
     fi
+    sudo sysctl -p >/dev/null 2>&1
 
-    if cmd_exists "iptables"; then
+    if type iptables >/dev/null 2>&1; then
         if ! iptables -L INPUT -n 2>/dev/null | grep -q "dpt:443"; then
-            iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
+            iptables -I INPUT -p tcp --dport 443 -j ACCEPT
             echo -e "${GREEN}[基础配置]${NC} 防火墙已放行 TCP 443 端口"
         else
             echo -e "${GREEN}[基础配置]${NC} 防火墙 TCP 443 端口规则已存在，跳过配置"
@@ -77,15 +75,16 @@ EOF2
 }
 
 function _os() {
-    local os=""
     if [[ -f "/etc/debian_version" ]]; then
-        source /etc/os-release && os="${ID}"
-        printf -- "%s" "${os}" && return
+        local os_id=$(grep -oP '^ID=\K\w+' /etc/os-release 2>/dev/null || echo "ubuntu")
+        printf -- "%s" "${os_id}"
+        return
     fi
     if [[ -f "/etc/redhat-release" ]]; then
-        os="centos"
-        printf -- "%s" "${os}" && return
+        printf -- "centos"
+        return
     fi
+    printf -- "ubuntu"
 }
 
 function _os_full() {
@@ -102,17 +101,6 @@ function _os_ver() {
     printf -- "%s" "${main_ver%%.*}"
 }
 
-function cmd_exists() {
-    local cmd="$1"
-    if eval type type >/dev/null 2>&1; then
-        eval type "$cmd" >/dev/null 2>&1
-    elif command >/dev/null 2>&1; then
-        command -v "$cmd" >/dev/null 2>&1
-    else
-        which "$cmd" >/dev/null 2>&1
-    fi
-}
-
 function parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -123,75 +111,49 @@ function parse_args() {
     done
 }
 
-function load_i18n() {
-    local lang="${LANG_PARAM#*=}"
-    if [[ -z "${lang}" && -f "${SCRIPT_CONFIG_PATH}" ]]; then
-        if cmd_exists "jq"; then
-            lang="$(jq -r '.language' "${SCRIPT_CONFIG_PATH}" 2>/dev/null)"
-        fi
-    fi
-    if [[ "$lang" == "auto" ]]; then
-        lang=$(echo "$LANG" | cut -d'_' -f1)
-    fi
-}
-
-function _error() {
-    printf "${RED}[${I18N_DATA['error']}] ${NC}"
-    printf -- "%s" "$@"
-    printf "\n"
-    exit 1
-}
-
 function check_os() {
-    case "$(_os)" in
-    centos) [[ "$(_os_ver)" -lt 7 ]] && _error "${I18N_DATA['centos']}" ;;
-    ubuntu) [[ "$(_os_ver)" -lt 16 ]] && _error "${I18N_DATA['ubuntu']}" ;;
-    debian) [[ "$(_os_ver)" -lt 9 ]] && _error "${I18N_DATA['debian']}" ;;
-    *) _error "${I18N_DATA['supported']}" ;;
-    esac
+    local cur_os="$(_os)"
+    if [[ "${cur_os}" != "ubuntu" && "${cur_os}" != "debian" && "${cur_os}" != "centos" ]]; then
+         echo -e "${YELLOW}[提示]${NC} 系统识别可能存在偏差，跳过硬性拦截继续执行..."
+    fi
 }
 
 function check_dependencies() {
     local packages=("ca-certificates" "openssl" "curl" "wget" "git" "jq" "tzdata" "qrencode" "socat")
-    local missing_packages=()
-    case "$(_os)" in
-    centos)
+    local missing=0
+    
+    if [[ "$(_os)" == "centos" ]]; then
         packages+=("crontabs" "util-linux" "iproute" "procps-ng" "bind-utils")
         for pkg in "${packages[@]}"; do
-            if ! rpm -q "$pkg" &>/dev/null; then missing_packages+=("$pkg"); fi
+            rpm -q "$pkg" &>/dev/null || missing=$((missing+1))
         done
-        ;;
-    debian | ubuntu)
+    else
         packages+=("cron" "bsdmainutils" "iproute2" "procps" "dnsutils")
         for pkg in "${packages[@]}"; do
-            if ! dpkg -s "$pkg" &>/dev/null; then missing_packages+=("$pkg"); fi
+            dpkg -s "$pkg" &>/dev/null || missing=$((missing+1))
         done
-        ;;
-    esac
-    return ${#missing_packages[@]}
+    fi
+    return ${missing}
 }
 
 function install_dependencies() {
     local packages=("ca-certificates" "openssl" "curl" "wget" "git" "jq" "tzdata" "qrencode" "socat")
-    case "$(_os)" in
-    centos)
+    if [[ "$(_os)" == "centos" ]]; then
         packages+=("crontabs" "util-linux" "iproute" "procps-ng" "bind-utils")
-        if cmd_exists "dnf"; then
+        if type dnf >/dev/null 2>&1; then
             dnf update -y && dnf install -y dnf-plugins-core
             for pkg in "${packages[@]}"; do dnf install -y ${pkg}; done
         else
             yum update -y && yum install -y epel-release yum-utils
             for pkg in "${packages[@]}"; do yum install -y ${pkg}; done
         fi
-        ;;
-    ubuntu | debian)
+    else
         packages+=("cron" "bsdmainutils" "iproute2" "procps" "dnsutils")
         apt-get update -y
         for pkg in "${packages[@]}"; do
             apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" ${pkg}
         done
-        ;;
-    esac
+    fi
 }
 
 function download_github_files() {
@@ -201,21 +163,22 @@ function download_github_files() {
     cd "${target_dir}"
     echo -e "${GREEN}[${I18N_DATA['download']}]${NC} ${github_api_url}"
     
+    rm -f temp_archive.tar.gz
     if ! curl -sLo temp_archive.tar.gz "${github_api_url}"; then
-        _error "${I18N_DATA['failed']}: ${github_api_url}"
+        echo -e "${RED}[错误]${NC} 下载主程序核心失败，请检查网络！"
+        exit 1
     fi
-    tar -xzf temp_archive.tar.gz --no-same-owner || true
+    
+    tar -xzf temp_archive.tar.gz --no-same-owner >/dev/null 2>&1
     if [ -d "Xray-main" ]; then
-        cp -r Xray-main/* ./ 2>/dev/null || true
+        cp -r Xray-main/* ./ 2>/dev/null
         rm -rf Xray-main
     fi
     rm -f temp_archive.tar.gz
 }
 
 function download_xray_script_files() {
-    local target_dir="$1"
-    local script_github_api="https://github.com/oxxconfig/Xray/archive/refs/heads/main.tar.gz"
-    download_github_files "${target_dir}" "${script_github_api}"
+    download_github_files "$1" "https://github.com/oxxconfig/Xray/archive/refs/heads/main.tar.gz"
 }
 
 function check_xray_script_version() {
@@ -225,7 +188,7 @@ function check_xray_script_version() {
     remote_version="$(curl -fsSL --connect-timeout 5 "$script_config_github_url" | jq -r '.version' 2>/dev/null || echo "0.0.0")"
 
     if [[ "${local_version}" != "${remote_version}" && "${remote_version}" != "0.0.0" ]]; then
-        echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} 检测到脚本新版本，一键自动更新中..."
+        echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} 检测到新版本，自动同步中..."
         cd "${HOME}"
         local temp_dir="${SCRIPT_CONFIG_DIR}/xray-script-temp"
         mkdir -p "${temp_dir}"
@@ -234,30 +197,23 @@ function check_xray_script_version() {
         mv -f "${temp_dir}" "${PROJECT_ROOT}"
         rm -f "${CUR_DIR}/${CUR_FILE}"
         cp -f "${PROJECT_ROOT}/install.sh" "${CUR_DIR}/${CUR_FILE}"
-        sed -i "s|${local_version}|${remote_version}|" "${SCRIPT_CONFIG_PATH}" 2>/dev/null || true
-        echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} ${I18N_DATA['completed']}"
-        bash "${CUR_DIR}/${CUR_FILE}" "$@"
-        exit 0
+        sed -i "s|${local_version}|${remote_version}|" "${SCRIPT_CONFIG_PATH}" 2>/dev/null
+        echo -e "${GREEN}[${I18N_DATA['tip']}]${NC} 更新完成，重新载入..."
+        exec bash "${CUR_DIR}/${CUR_FILE}" "$@"
     fi
 }
 
 function main() {
     parse_args "$@"
-    load_i18n
-    [[ $EUID -ne 0 ]] && _error "${I18N_DATA['root']}"
     check_os
     init_env_optimization
 
-    local is_first_run=0
-    if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then is_first_run=1; fi
-
-    if [[ "${is_first_run}" -eq 1 || "${FORCE_CHECK_DEPS}" -eq 1 ]]; then
-        if check_dependencies; then
-            echo -e "${GREEN}[基础配置]${NC} 检测到核心环境依赖已完整，跳过安装"
-        else
-            echo -e "${YELLOW}[基础配置]${NC} 正在补全系统核心环境依赖..."
-            install_dependencies || true
-        fi
+    check_dependencies
+    if [ $? -ne 0 ]; then
+        echo -e "${YELLOW}[基础配置]${NC} 正在补全系统核心环境依赖..."
+        install_dependencies
+    else
+        echo -e "${GREEN}[基础配置]${NC} 检测到核心环境依赖已完整，跳过安装"
     fi
 
     if [[ ! -d "${SCRIPT_CONFIG_DIR}" ]]; then mkdir -p "${SCRIPT_CONFIG_DIR}"; fi
@@ -275,50 +231,35 @@ function main() {
         shift
     done
 
-    local script_path
-    script_path="$(jq -r '.path' "${SCRIPT_CONFIG_PATH}" 2>/dev/null || echo "")"
-    if [[ -z "${script_path}" && -z "${PROJECT_ROOT}" ]]; then
+    local script_path="$(jq -r '.path' "${SCRIPT_CONFIG_PATH}" 2>/dev/null || echo "")"
+    if [[ -z "${script_path}" ]]; then
         PROJECT_ROOT='/usr/local/xray-script'
-        SCRIPT_CONFIG="$(jq --arg path "${PROJECT_ROOT}" '.path = $path' "${SCRIPT_CONFIG_PATH}")"
-        echo "${SCRIPT_CONFIG}" >"${SCRIPT_CONFIG_PATH}"
-    elif [[ -n "${script_path}" ]]; then
+        local json_payload=$(jq --arg path "${PROJECT_ROOT}" '.path = $path' "${SCRIPT_CONFIG_PATH}" 2>/dev/null)
+        [[ -n "${json_payload}" ]] && echo "${json_payload}" >"${SCRIPT_CONFIG_PATH}"
+    else
         PROJECT_ROOT="${script_path}"
-    elif [[ -n "${PROJECT_ROOT}" ]]; then
-        SCRIPT_CONFIG="$(jq --arg path "${PROJECT_ROOT}" '.path = $path' "${SCRIPT_CONFIG_PATH}")"
-        echo "${SCRIPT_CONFIG}" >"${SCRIPT_CONFIG_PATH}"
     fi
 
-    I18N_DIR="${PROJECT_ROOT}/i18n"
     CORE_DIR="${PROJECT_ROOT}/core"
-    SERVICE_DIR="${PROJECT_ROOT}/service"
-    CONFIG_DIR="${PROJECT_ROOT}/config"
-    TOOL_DIR="${PROJECT_ROOT}/tool"
 
-    if [[ -d "${PROJECT_ROOT}" ]]; then
+    if [[ -d "${PROJECT_ROOT}" && -f "${CORE_DIR}/main.sh" ]]; then
         check_xray_script_version "$@"
     else
         download_xray_script_files "${PROJECT_ROOT}"
     fi
 
-    local lang
-    lang="$(jq -r '.language' "${SCRIPT_CONFIG_PATH}" 2>/dev/null || echo "")"
-    if [[ -z "${lang}" ]]; then
-        LANG_PARAM="zh"
-        SCRIPT_CONFIG="$(jq --arg language "${LANG_PARAM}" '.language = $language' "${SCRIPT_CONFIG_PATH}")"
-        echo "${SCRIPT_CONFIG}" >"${SCRIPT_CONFIG_PATH}"
-    fi
+    local json_lang=$(jq --arg language "zh" '.language = $language' "${SCRIPT_CONFIG_PATH}" 2>/dev/null)
+    [[ -n "${json_lang}" ]] && echo "${json_lang}" >"${SCRIPT_CONFIG_PATH}"
 
     if [ -f "${CORE_DIR}/main.sh" ]; then
         sed -i '/alias xray=/d' ~/.bashrc
-        echo "alias xray='set +euo pipefail; bash ${CORE_DIR}/main.sh'" >> ~/.bashrc
-        source ~/.bashrc >/dev/null 2>&1 || true
+        echo "alias xray='bash ${CORE_DIR}/main.sh'" >> ~/.bashrc
     fi
 
     echo -e "${GREEN}[部署完成]${NC} 前置依赖与系统优化已就绪，正在唤起 Xray 主内核业务脚本..."
-    set +euo pipefail
     exec bash "${CORE_DIR}/main.sh" "${QUICK_INSTALL}"
 }
 
 main "$@"
 EOF
-sed -i 's/\r$//' install1.sh && sudo bash install1.sh
+sed -i 's/\r$//' install.sh && rm -rf /usr/local/xray-script && bash install.sh
