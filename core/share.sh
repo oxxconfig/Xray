@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2025 zxcvos
-#
-# Xray-script:
-#   https://github.com/zxcvos/Xray-script
 # =============================================================================
 # 注释: 通过 Qwen3-Coder 生成。
 # 脚本名称: share.sh
@@ -11,9 +7,6 @@
 #           根据服务端配置 (Xray 和 Script) 自动提取必要参数，
 #           构造多种类型的分享链接 (包括 Reality, XHTTP, mKCP, TLS 等)，
 #           并可选地生成二维码。支持多语言。
-# 作者: zxcvos
-# 时间: 2025-07-25
-# 版本: 1.0.0
 # 依赖: bash, jq, curl, qrencode, sed
 # 配置:
 #   - ${XRAY_CONFIG_PATH}: Xray 服务端配置文件 (用于读取协议、UUID、密码等)
