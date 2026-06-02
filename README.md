@@ -260,7 +260,7 @@ SNI 配置适合安装一次后长期使用，不适合反复重置系统安装�
 [Cloudreve][cloudreve]
 
 **此脚本仅供交流学习使用，请勿使用此脚本行违法之事。网络非法外之地，行非法之事，必将接受法律制裁。**
-[zxcvos]: https://github.com/zxcvos
+[来自zxcvos]: https://github.com/zxcvos
 [Xray-core]: https://github.com/XTLS/Xray-core (THE NEXT FUTURE)
 [REALITY]: https://github.com/XTLS/REALITY (THE NEXT FUTURE)
 [XHTTP]: https://github.com/XTLS/Xray-core/discussions/4113 (XHTTP: Beyond REALITY)
