@@ -89,8 +89,9 @@
   wget --no-check-certificate -O ${HOME}/Xray-script.sh https://raw.githubusercontent.com/zxcvos/Xray-script/main/install.sh && bash ${HOME}/Xray-script.sh
   ```
 * 无人值守一键部署
+
   ```sh
-curl -y 10 --connect-timeout 10 --retry 3 -sSO https://raw.githubusercontent.com/oxxconfig/Xray/main/install.sh && sed -i 's/\r$//' install.sh && echo "alias xray='set +euo pipefail; bash /usr/local/xray-script/install.sh'" >> ~/.bashrc && source ~/.bashrc && printf "1\n1\n" | sudo bash install.sh
+  curl -y 10 --connect-timeout 10 --retry 3 -sSO https://raw.githubusercontent.com/oxxconfig/Xray/main/install.sh && sed -i 's/\r$//' install.sh && echo "alias xray='set +euo pipefail; bash /usr/local/xray-script/install.sh'" >> ~/.bashrc && source ~/.bashrc && printf "1\n1\n" | sudo bash install.sh
   ```
 ## 脚本界面
 
