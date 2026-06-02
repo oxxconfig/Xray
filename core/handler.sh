@@ -1,31 +1,4 @@
 #!/usr/bin/env bash
-#
-# Copyright (C) 2025 zxcvos
-#
-# Xray-script:
-#   https://github.com/zxcvos/Xray-script
-# =============================================================================
-# 注释: 通过 Qwen3-Coder 生成。
-# 脚本名称: handler.sh
-# 功能描述: Xray-script 项目的处理器脚本。
-#           负责执行具体的操作，如安装/卸载 Xray/Nginx、配置文件生成、
-#           启动/停止服务、管理 Docker 容器、处理路由规则等。
-#           由 main.sh 调用，根据传入参数执行相应功能。
-# 作者: zxcvos
-# 时间: 2025-07-25
-# 版本: 1.0.0
-# 依赖: bash, jq, curl, systemctl, crontab, sed, awk, grep, cut, tr
-# 配置:
-#   - ${SCRIPT_CONFIG_DIR}/config.json: 读取和写入脚本配置 (如版本、域名、密钥等)
-#   - ${I18N_DIR}/${lang}.json: 用于读取具体的提示文本 (i18n 数据文件)
-#   - ${CONFIG_DIR}/xray/*.json: 读取 Xray 配置模板
-#   - ${CONFIG_DIR}/nginx/conf/*: 读取 Nginx 配置模板
-#   - /usr/local/etc/xray/config.json: 读取和写入 Xray 最终配置文件
-#   - /usr/local/nginx/conf/*: 读取和写入 Nginx 最终配置文件
-#   - ${HOME}/.acme.sh/: 读取和写入 SSL 证书相关文件
-# =============================================================================
-
-# set -Eeuxo pipefail
 
 # --- 环境与常量设置 ---
 # 将常用路径添加到 PATH 环境变量，确保脚本能在不同环境中找到所需命令
