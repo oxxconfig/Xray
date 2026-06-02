@@ -251,10 +251,23 @@ function download_github_files() {
     mkdir -p "${target_dir}"
     cd "${target_dir}"
     echo -e "${GREEN}[${I18N_DATA['download']}]${NC} ${github_api_url}"
-    # 全自动非交互下载安装
-    if ! curl -sL "${github_api_url}" | tar xz --strip-components=1; then
+    
+    # 1. 临时下载为压缩包，避免管道断裂无法捕获
+    if ! curl -sLo temp_archive.tar.gz "${github_api_url}"; then
         _error "${I18N_DATA['failed']}: ${github_api_url}"
     fi
+    
+    # 2. 干净解压，压制 tar 警告，确保 set -e 不会误杀
+    tar -xzf temp_archive.tar.gz --no-same-owner || true
+    
+    # 3. 规整目录层级（适配 Xray-main 结构）
+    if [ -d "Xray-main" ]; then
+        cp -r Xray-main/* ./ 2>/dev/null || true
+        rm -rf Xray-main
+    fi
+    
+    # 4. 清理临时文件
+    rm -f temp_archive.tar.gz
 }
 
 function download_xray_script_files() {
