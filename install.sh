@@ -316,10 +316,7 @@ function main() {
         mkdir -p "${SCRIPT_CONFIG_DIR}"
     fi
 
-    # 完美替换：彻底移除原作者的旧地址，统一使用你自己的仓库与保底逻辑
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then
-        # 优先从你自己的 GitHub 仓库下载最新的 config.json
-        # 如果下载失败(||)，则在本地生成一个结构完全对齐的保底 JSON
         wget --timeout=10 -O "${SCRIPT_CONFIG_PATH}" https://raw.githubusercontent.com/oxxconfig/Xray/main/config.json || \
         echo '{"version":"2026.03.17","language":"zh","path":"/usr/local/xray-script"}' > "${SCRIPT_CONFIG_PATH}"
     fi
