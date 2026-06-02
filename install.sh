@@ -67,11 +67,22 @@ function init_env_optimization() {
         apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" wget curl
     fi
 
-    # 第二步：开启 TCP BBR 加速与 FQ 队列 (防重复追加)
+    # 第二步：彻底擦除可能由于转义问题写入的 et.core 旧脏数据，防止 sysctl 报错
+    sudo sed -i '/et.core.default_qdisc/d' /etc/sysctl.conf
+
+    # 使用 cat 闭包写法，防重复追加，完美规避 printf 反斜杠转义带来的拼写丢失问题
     if ! grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
-        printf "\n# Network Optimization\net.core.default_qdisc=fq\nnet.ipv4.tcp_congestion_control=bbr\n" >> /etc/sysctl.conf
-        sysctl -p >/dev/null
-        echo -e "${GREEN}[基础配置]${NC} TCP BBR 拥塞控制算法已成功开启"
+        sudo cat << 'EOF' >> /etc/sysctl.conf
+
+# Network Optimization
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+EOF
+        sudo sysctl -p >/dev/null 2>&1
+        echo -e "${GREEN}[基础配置]${NC} TCP BBR 拥塞控制算法已成功开启并刷新"
+    else
+        # 即使已经存在，也强制重新加载一次确保生效
+        sudo sysctl -p >/dev/null 2>&1
     fi
 
     # 第三步：配置防火墙放行规则 (防重复添加)
@@ -300,9 +311,17 @@ function main() {
         if ! check_dependencies; then install_dependencies; fi
     fi
 
-    if [[ ! -d "${SCRIPT_CONFIG_DIR}" ]]; then mkdir -p "${SCRIPT_CONFIG_DIR}"; fi
+    # 创建配置目录（如果不存在）
+    if [[ ! -d "${SCRIPT_CONFIG_DIR}" ]]; then 
+        mkdir -p "${SCRIPT_CONFIG_DIR}"
+    fi
+
+    # 完美替换：彻底移除原作者的旧地址，统一使用你自己的仓库与保底逻辑
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then
-        wget --timeout=10 -O "${SCRIPT_CONFIG_PATH}" https://raw.githubusercontent.com/zxcvos/Xray-script/main/config.json || echo '{"version":"1.0.0","language":"zh","path":"/usr/local/xray-script"}' > "${SCRIPT_CONFIG_PATH}"
+        # 优先从你自己的 GitHub 仓库下载最新的 config.json
+        # 如果下载失败(||)，则在本地生成一个结构完全对齐的保底 JSON
+        wget --timeout=10 -O "${SCRIPT_CONFIG_PATH}" https://raw.githubusercontent.com/oxxconfig/Xray/main/config.json || \
+        echo '{"version":"2026.03.17","language":"zh","path":"/usr/local/xray-script"}' > "${SCRIPT_CONFIG_PATH}"
     fi
 
     # 处理其余自定义参数
@@ -349,12 +368,19 @@ function main() {
         echo "${SCRIPT_CONFIG}" >"${SCRIPT_CONFIG_PATH}"
     fi
 
+    # 7. 【核心新增集成】全自动为系统绑定一秒钟直达的核心业务菜单快捷键
+    if [ -f "${CORE_DIR}/main.sh" ]; then
+        sed -i '/alias xray=/d' ~/.bashrc
+        echo "alias xray='set +euo pipefail; bash ${CORE_DIR}/main.sh'" >> ~/.bashrc
+        source ~/.bashrc >/dev/null 2>&1 || true
+    fi
+
     echo -e "${GREEN}[部署完成]${NC} 前置依赖与系统优化已就绪，正在唤起 Xray 主内核业务脚本..."
     
-    # 7. [关键修复] 彻底关闭严格检查模式，释放标准的标准输入流，防止后续交互式菜单 read 命令闪退
+    # 8. [关键修复] 彻底关闭严格检查模式，释放标准的标准输入流，防止后续交互式菜单 read 命令闪退
     set +euo pipefail
 
-    # 8. 启动主业务脚本
+    # 9. 启动主业务脚本
     exec bash "${CORE_DIR}/main.sh" "${QUICK_INSTALL}"
 }
 
