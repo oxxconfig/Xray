@@ -262,7 +262,7 @@ function download_xray_script_files() {
     # 彻底放弃 api.github.com，改用不限流的 raw/archive 存档直连链
     local script_github_api="https://github.com/oxxconfig/Xray/archive/refs/heads/main.tar.gz"
     download_github_files "${target_dir}" "${script_github_api}"
-}  # <--- 就是这里！把你之前漏掉的这个闭合大括号补上了！
+}
 
 # =============================================================================
 # 优化更新函数: 剥离全自动运行中阻塞的 read 确认弹窗
@@ -311,8 +311,13 @@ function main() {
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then is_first_run=1; fi
 
     if [[ "${is_first_run}" -eq 1 || "${FORCE_CHECK_DEPS}" -eq 1 ]]; then
-        if ! check_dependencies; then install_dependencies; fi
-        if ! check_dependencies; then install_dependencies; fi
+        # 改为正向判断， || true 确保状态码安全
+        if check_dependencies; then
+            echo -e "${GREEN}[基础配置]${NC} 检测到核心环境依赖已完整，跳过安装"
+        else
+            echo -e "${YELLOW}[基础配置]${NC} 正在补全系统核心环境依赖..."
+            install_dependencies || true
+        fi
     fi
 
     # 创建配置目录（如果不存在）
@@ -320,9 +325,7 @@ function main() {
         mkdir -p "${SCRIPT_CONFIG_DIR}"
     fi
 
-    # 完美替换：彻底移除原作者的旧地址，统一使用你自己的仓库与保底逻辑
     if [[ ! -f "${SCRIPT_CONFIG_PATH}" ]]; then
-        # 优先从你自己的 GitHub 仓库下载最新的 config.json
         # 如果下载失败(||)，则在本地生成一个结构完全对齐的保底 JSON
         wget --timeout=10 -O "${SCRIPT_CONFIG_PATH}" https://raw.githubusercontent.com/oxxconfig/Xray/main/config.json || \
         echo '{"version":"2026.03.17","language":"zh","path":"/usr/local/xray-script"}' > "${SCRIPT_CONFIG_PATH}"
