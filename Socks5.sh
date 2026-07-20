@@ -5,8 +5,8 @@ fi
 
 # 2. 正确定义 Socks5 认证参数（修复了引号）
 S5_PORT=1080
-S5_USER="xxxxxxxx"
-S5_PASS="xxxxxxxx@123456"
+S5_USER="TC"
+S5_PASS="Tcnet@123456"
 
 # 3. 智能自动寻找服务器上真正的 Xray 配置文件
 XRAY_CONFIG=""
