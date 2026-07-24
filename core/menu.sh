@@ -391,14 +391,29 @@ function menu_custom_sites() {
 # 返回值: 无 (直接打印到标准错误输出 >&2)
 # =============================================================================
 function print_banner() {
+    # 顶部留空，提升视觉舒适度
+    echo ""
+
+    # 随机切换两款不同风格的 XRAY 艺术字
     case $(($(bash "${GENERATE_PATH}" '--random' 1 100) % 2)) in
     0)
-        local banner_0="G1swOzE7MzU7OTVtXxtbMDsxOzMxOzkxbV8bWzBtICAgG1swOzE7MzI7OTJtX18bWzBtICAbWzA7MTszNDs5NG1fG1swbSAgICAbWzA7MTszMTs5MW1fG1swbSAgIBtbMDsxOzMyOzkybV8bWzA7MTszNjs5Nm1fXxtbMDsxOzQ7OTRtX19bMG0bWzA7MTszNTs5NW1fXxtbMG0gICAbWzA7MTszMzkzbV8bWzA7MTszjs5Mm1fXxtbMDsxOzM2Ozk2bV9fG1swOzE7MzQ7OTRtX19bMG0gICAbWzA7MTszMTs5MW1fG1swOzE7MzMzOTNtX18bWzA7MTszMjs5Mm1fXxtbMG0gIAogG1swOzE7MzE7OTFtXBtbMG0gG1swOzE7MzM7OTNtXBtbMG0gG1swOzE7MzI7OTJtLxtbMG0gG1swOzE7MzY7OTZtLxtbMG0gG1swOzE7MzQ7OTRtXxtbMG0gG1swOzE7MzU7OTVtXxtbMG0gIBtbMDsxOzMzOzkzbXwbWzBtIBtbMDsxOzMyOzkybXwbWzBtIBtbMDsxOzM2Ozk2bXxfG1swOzE7MzQ7OTRtXxtbMG0gICAbWzA7MTszMTs5MW1fXxtbMDsxOzMzOzkzbXwbWzBtIBtbMDsxOzMyOzkybXxfG1swOzE7MzY7OTZtXxtbMG0gICAbWzA7MTszNTs5NW1fXxtbMDsxOzMxOzkxbXwbWzBtIBtbMDsxOzMzOzkzbXwbWzBtICAbWzA7MTszMjs5Mm1fG1swOzE7MzY7OTZtXxtbMG0gG1swOzE7MzQ7OTRtXBtbMG0gCiAgG1swOzE7MzI7OTJtXBtbMG0gG1swOzE7MzY7OTZtVhtbMG0gG1swOzE7MzQ7OTRtLxtbMG0gIBtbMDsxOzM1Ozk1bXwbWzBtIBtbMDsxOzMxOzkxbXwbWzBtG1swOzE7MzM7OTNtX19bMG0bWzA7MTszMjs5Mm1|G1swbSAbWzA7MTszNjs5Nm1|G1swbSAgICAbWzA7MTszNTs5NW1|G1swbSAbWzA7MTszMTs5MW1|G1swbSAgICAgICAbWzA7MTszNDs5NG1|G1swbSAbWzA7MTszNTs5NW1|G1swbSAgICAbWzA7MTszMjs5Mm1|G1swbSAbWzA7MTszNjs5Nm1|XxtbMDsxOzQ7OTRtXykbWzA7MTszNTs5NW1|G1swbQogICAbWzA7MTszNjs5Nm0+G1swbSAbWzA7MTszNDs5NG08G1swbSAgIBtbMDsxOzMxOzkxbXwbWzBtICAbWzA7MTszMjs5Mm1fXxtbMG0gIBtbMDsxOzQ7OTRtdxtbMG0bWzA7MTszNDs5NG1|G1swbSAgICAbWzA7MTszMTs5MW1|G1swbSAbWzA7MTszMzkzbXwbWzBtICAgICAgIBtbMDsxOzU7OTVtX3wbWzBtG1swOzE7MzE7OTFtfBtbMG0gICAgG1swOzE7MzY7OTZtfBtbMG0gIBtbMDsxOzQ7OTRtfFtbMDsxOzM1Ozk1bV9fG1swOzE7MzE7OTFtL1sw0gCiAgG1swOzE7MzQ7OTRtLxtbMG0gG1swOzE7MzU7OTVtLhtbMG0gG1swOzE7MzMxOzkxbVwbWzBtICAbWzA7MTszMzkzbXwbWzBtIBtbMDsxOzMyOzkybXwbWzBtICAbWzA7MTszNDs5NG1|G1swbSAbWzA7MTszNTs5NW1|G1swbSAgICAbWzA7MTszMzkzbXwbWzBtIBtbMDsxOzMyOzkybXwbWzBtICAgICAgIBtbMDsxOzMxOzkxbXwbWzBtIBtbMDsxOzMzOzkzbXwbWzBtICAgIBtbMDsxOzQ7OTRtfBtbMG0gG1swOzE7NTs5NW1fX3wbWzBtG1swbSAgICAgCiAbWzA7MTszNDs5NG0vG1swOzE7MzU7OTVtXy9bMG0gG1swOzE7MzE7OTFtXBtbMDsxOzMzOzkzbV9cG1swbSAbWzA7MTszMjs5Mm1|G1swOzE7MzY7OTZtX3wbWzBtICAbWzA7MTszNTs5NW18XxtbMDsxOzMxOzkxbXwbWzBtICAgIBtbMDsxOzMyOzkybXwbWzBtG1swOzE7MzY7OTZtX3wbWzBtICAgICAgIBtbMDsxOzMzOzkzbXwbWzBtG1swOzE7MzY7OTZtfF9bMG0gICAgG1swOzE7MzU7OTVtfF9bMzA7MTszMTs5MW18bWzBtICAgICAKCkNvcHlyaWdodCAoQykgb3h4Y29uZmlnIHwgaHR0cHM6Ly9naXRodWIuY29tL294eGNvbmZpZy9YcmF5Cgo="
-        echo -n "${banner_0}" | tr -d '\r\n ' | base64 --decode | sed 's/G1s/\x1b\[/g'
+        # 风格 1：青蓝渐变 XRAY 3D 大字
+        echo -e "\033[1;36m__  __\033[1;34m______    \033[1;35m___   \033[1;31m__  __\033[0m"
+        echo -e "\033[1;36m\\ \\/ /\033[1;34m_  /_\\ \\  \033[1;35m/   | \033[1;31m\\ \\/ /\033[0m"
+        echo -e " \033[1;36m\\  / \033[1;34m/ /  \\ \\\033[1;35m/ /| |  \033[1;31m\\  /\033[0m"
+        echo -e " \033[1;36m/  \\ \033[1;34m/ /____\\\033[1;35m/ ___ |  \033[1;31m/ /  \033[0m"
+        echo -e "\033[1;36m/_/\\_\\\033[1;34m/______/_\033[1;35m/_/  |_| \033[1;31m/_/   \033[0m"
+        echo ""
         ;;
     1)
-        local banner_1="G1swOzE7MzQ7OTRtX18bWzBtICAgG1swOzE7MzQ7OTRtX18bWzBtICAbWzA7MTszNDs5NG1fG1swbSAgICAbWzA7MTszNDs5NG1fG1swbSAgIBtbMDszNG1fX19fX19fG1swbSAgIBtbMDszNG1fX19bWzA7MzdtX19fXxtbMG0gICAbWzA7MzdtX19fX19bMG0gIAogG1swOzE7MzQ7OTRtdxtbMG0bWzA7MTszNDs5NG1cG1swbSAbWzA7MTszNDs5NG0vG1swbSAbWzA7MTszNDs5NG0vG1swbSAbWzA7MzRtfBtbMG0gG1swOzM0bXwbWzBtICAbWzA7MzRtfBtbMG0gG1swOzM0bXwbWzBtIBtbMDszNG18X19bMG0gICAbWzA7MzdtX19|G1swbSAbWzA7MzdtfF9fG1swbSAgIBtbMDszN21fX3wbWzBtIBtbMDszN218G1swbSAgG1swOzE7MzA7OTBtX18bWzBtIBtbMDsxOzMwOzkwbVwbWzBtIAogG1swOzM0bVwbWzBtIBtbMDszNG1WG1swbSAbWzA7MzRtLxtbMG0gIBtbMDszNG1|G1swbSAbWzA7MzRtfF9fXxtbMG0bWzA7MzdtfBtbMG0gICAgG1swOzMzOzM3bXwbWzBtIBtbMDszN21|G1swbSAgICAgICAbWzA7MzdtfBtbMG0gG1swOzE7MzA7OTBtfBtbMG0gICAgG1swOzE7MzA7OTBtfBtbMG0gG1swOzE7MzA7OTBtfF9fKRtbMG0gG1swOzE7MzA7OTBtfBtbMG0KICAgG1swOzM0bT4bWzBtIBtbMDszNG08G1swbSAgIBtbMDszN21|G1swbSAbWzA7MzdtX19bMG0gIBtbMDszN21|G1swbSAgICAbWzA7MzdtfBtbMG0gG1swOzMzOzM3bXwbWzBtICAgICAgIBtbMDsxOzMwOzkwbXwbWzBtIBtbMDsxOzMwOzkwbXwbWzBtICAgIBtbMDsxOzMwOzkwbXwbWzBtICAbWzA7MTszNDs5NG1fX18vG1swbSAgCiAgG1swOzMzOzM3bS9fG1swbSAbWzA7MzdtXBtbMG0gG1swOzM3bXwbWzBtICAgICAbWzA7MzdtfBtbMG0gG1swOzM3bXwbWzBtICAgIBtbMDsxOzMwOzkwbXwbWzBtICAgIBtbMDsxOzMwOzkwbXwbWzBtIBtbMDsxOzMwOzkwbXwbWzBtICAgICAgIBtbMDsxOzMwOzkwbXwbWzBtIBtbMDsxOzQ7OTRtfBtbMG0gICAgG1swOzE7MzQ7OTRtfBtbMG0gG1swOzE7MzQ7OTRtfBtbMG0gICAgIAogG1swOzM3bS9fLxtbMG0gG1swOzM3bVxfXBtbMDsxOzMwOzkwbXxffBtbMG0gICAgIBtbMDsxOzMwOzkwbXxffBtbMG0gICAgG1swOzE7MzA7OTBtfF98G1swbSAgICAgICAbWzA7MTszNDs5NG1fX3wbWzBtICAgIBtbMDsxOzQ7MzRtdxtbMG0bWzA7MTszNDs5NG18XxtbMDszNG18XwogCgpDb9B5cmlnaHQgKEMpIG94eGNvbmZpZyB8IGh0dHBzOi8vZ2l0aHViLmNvbS9veHhjb25maWcvWHJheQoK"
-        echo -n "${banner_1}" | tr -d '\r\n ' | base64 --decode | sed 's/G1s/\x1b\[/g'
+        # 风格 2：紫绿渐变 XRAY 方块大字
+        echo -e "\033[1;35m██╗  ██╗\033[1;34m██████╗ \033[1;36m█████╗ \033[1;32m██╗   ██╗\033[0m"
+        echo -e "\033[1;35m╚██╗██╔╝\033[1;34m██╔══██╗\033[1;36m██╔══██╗\033[1;32m╚██╗ ██╔╝\033[0m"
+        echo -e " \033[1;35m╚███╔╝ \033[1;34m██████╔╝\033[1;36m███████║ \033[1;32m╚████╔╝ \033[0m"
+        echo -e " \033[1;35m██╔██╗ \033[1;34m██╔══██╗\033[1;36m██╔══██║  \033[1;32m╚██╔╝  \033[0m"
+        echo -e "\033[1;35m██╔╝ ██╗\033[1;34m██║  ██║\033[1;36m██║  ██║   \033[1;32m██║   \033[0m"
+        echo -e "\033[1;35m╚═╝  ╚═╝\033[1;34m╚═╝  ╚═╝\033[1;36m╚═╝  ╚═╝   \033[1;32m╚═╝   \033[0m"
+        echo ""
         ;;
     esac
 }
